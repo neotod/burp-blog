@@ -1,0 +1,71 @@
+{% extends 'dashboard/parent.html' %}
+
+{% block head %}
+    {{ super() }}
+    <link rel="stylesheet" type="text/css" href="/static/dashboard/all-posts/styles.css"/>
+{% endblock head %}
+
+{% block content_container %}
+    <div class="all-posts-container">
+        {% if posts %}
+            {% for post in posts %}
+                <div class="mini-post-container">
+                    <a class="parent-link" title="See your post" href="{{ post.url }}">
+                        <div class="mini-post-wrapper">
+
+                            <div class="mini-post-image">
+                            {% if post.image_url %}
+                                <img src="/{{ post.image_url }}"/>
+                            {% else %}
+                                <span>No Image</span>
+                            {% endif %}
+                            </div>
+                                    
+                            <div class="mini-post-content">
+                                <div class="mini-post-subject">
+                                    <span>{{ post.subject }}</span>
+                                </div>
+                                <div class="mini-post-metadata">
+                                    <div class="mini-post-tags">
+                                        {% for tag in post.tags %}
+                                            {% set tag_name = tag %}
+                                            {% if not loop.last %}
+                                                {% set tag_name = tag_name + ', ' %}
+                                            {% endif %}
+                                            <span class="post-tag">
+                                                {{ tag_name | capitalize }}
+                                            </span>
+                                        {% endfor %}
+                                    </div>
+                                    <div class="mini-post-timestamp">
+                                        <span>{{ post.timestamp|e }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mini-post-subject mobile-mini-post-subject">
+                                <span>{{ post.subject }}</span>
+                            </div>
+                        </div>
+                    </a>
+                    <div class="mini-post-options">
+                        <div class="edit-button-wrapper">
+                            <a title="Edit the post" href="/dashboard/all-posts/edit-post/{{post.id}}">Edit</a>
+                        </div>
+                        <div class="delete-button-wrapper">
+                            <a title="Delete the post" href="/dashboard/all-posts/delete-post/{{post.id}}">Delete</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="referrer-link-wrapper">
+                <div>
+                    <span>Congratulations! You have no post here!</span>
+                </div>
+                <div>
+                    <a tilte=":)" href="/dashboard/write-post">Write a post you dirty useless</a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+{% endblock content_container %}

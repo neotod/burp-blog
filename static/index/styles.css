@@ -1,0 +1,270 @@
+.posts-wrapper {
+    flex-basis: 50%;
+    flex-grow: 10;
+
+    display: flex;
+    flex-direction: column;
+}
+
+
+.posts-indicator {
+    font-size: 20px;
+    color: white;
+    background-color: gray;
+    padding: 5px 10px;
+    display: none;
+}
+
+
+.post-container {
+    width: 100%;
+    background-color: aqua;
+}
+
+.posts-wrapper article { /* check this out if it's working later */
+    margin: 10px 0 10px 0;
+}
+
+.posts-wrapper .last-article {
+    margin: 0 0 10px 0 !important;
+}
+
+@media only screen and (max-width: 900px) {
+    .post-container {
+        width: 100%;
+    }
+
+    .pages-wrapper {
+        text-align: center;
+        margin: 0 10px 30px 10px !important;
+        width: 95% !important;
+    }
+
+    .main-container {
+        flex-direction: column;
+    }
+
+    .tags-wrapper {
+        order: 1
+    }
+
+    .posts-wrapper {
+        order: 3;
+    }
+
+    .page-indicator {
+        order: 2
+    }
+
+    .tags-indicator {
+        border: none !important;
+    }
+
+    .posts-indicator {
+        display: block;
+    }
+
+    .page-indicator {
+        display: none !important;
+    }
+
+    .footer-container .footer-wrapper {
+        width: 95%;
+    }
+
+    .post-footer-wrapper {
+        display: block !important;
+        height: auto !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }    
+
+    .post-information-wrapper {
+        text-align: center;
+    }
+
+    .post-continue-wrapper {
+        text-align: center !important;
+    }
+
+    .post-continue-wrapper a { 
+        display: block !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    .post-main-wrapper {
+        padding: 15px !important;
+    }
+
+    .post-subject {
+        font-size: medium !important;
+        text-align: left !important;
+    }
+}
+
+
+.post-container .italic-text {
+    font-style: italic;
+}
+
+.post-container .bold-text {
+    font-weight: bold;
+}
+
+
+.post-container .image-wrapper {
+    text-align: center;
+    width: auto;
+    background-color: white;
+
+}
+
+.post-container .image-wrapper a {
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+
+    box-shadow: inset 0px 0px 50px 29px rgba(0,0,0,0.32);
+
+    display: inline-block;
+    width: 100%;
+    height: 400px;
+}
+
+.post-container .image-wrapper img {
+    width: 100%;
+}
+
+
+.post-subject {
+    text-align: center;
+    font-size: x-large;
+    margin-bottom: 50px !important;
+}
+
+
+.post-main-wrapper {
+    padding: 15px 50px;
+}
+
+
+.post-preface p {
+    line-height: 1.8;
+}
+
+
+.post-footer-wrapper {
+    display: flex;
+    flex-direction: row;
+
+    margin: 50px 0 0 50px;
+    height: 60px;
+}
+
+
+.post-information-wrapper {
+    flex-basis: 50%;
+    flex-grow: 3;
+    flex-shrink: 1;
+    padding: 20px 10px;
+}
+
+
+.post-tags-wrapper, .post-timestamp-wrapper {
+    display: inline-block;
+}
+
+.post-timestamp-wrapper {
+    margin-left: 20px;
+}
+
+
+.post-continue-wrapper {
+    text-align: right;
+    flex-basis: 40%;
+    flex-grow: 5;
+    flex-shrink: 3;
+    height: auto;
+    align-self: flex-end;
+    margin-bottom: 15px;
+}
+
+.post-continue-wrapper a {
+    text-decoration: none;
+    font-size: x-large;
+    font-weight: 800;
+    background-color: white;
+    padding: 15px 50px;
+}
+
+.post-continue-wrapper a:visited {
+    color: black
+}
+
+
+.tags-wrapper {
+    flex-basis: 10%;
+    flex-grow: 2;
+
+    display: flex;
+    flex-direction: column;
+    background-color: black;
+}
+
+.tags-wrapper form {
+    padding: 10px;
+}
+
+
+.tags-indicator span {
+    box-sizing: border-box;
+    width: 100%;
+    font-size: 20px;
+    color: white;
+    background-color: rgb(76, 76, 76);
+    display: inline-block;
+    border-top: solid 2px black;
+    border-left: solid 2px black;
+    padding: 10px;
+}
+
+.tags-main {
+    padding: 5px;
+}
+
+.tags {
+    display: inline-block;
+    margin-bottom: 5px;
+}
+
+
+.pages-wrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    margin: auto;
+    width: 95%;
+    text-align: left;
+    margin-bottom: 30px;
+}
+
+.pages-text {
+    font-size: 15px;
+    margin-right: 5px;
+    padding: 10px 15px;
+    background-color: white;
+}
+
+.pages-wrapper button {
+    font-size: 15px;
+    width: 40px;
+    height: 40px;
+    margin-bottom: 2px;
+}
+
+.pages-wrapper button:disabled{
+    background-color: black;
+    color: white;
+}

@@ -1,0 +1,95 @@
+{% extends 'dashboard/parent.html' %}
+
+{% block head %}
+    {{ super() }}
+    <link rel="stylesheet" type="text/css" href="/static/dashboard/write-post/styles.css"/>
+{% endblock head %} 
+
+{% block content_container %}
+    {% if not edit_mode %}
+        <form method="POST" enctype="multipart/form-data">
+    {% else %}
+        <form method="POST" enctype="multipart/form-data" action="/dashboard/write-post/edit-post-{{ post_remainder['id'] }}">
+    {% endif %}
+        <div class="inputs-wrapper">
+            <div class="inputs-row input-subject-container">
+                <span class="length-indicator">0/100</span>
+                <input class="input-subject" type="text" name="subject" placeholder="Subject" autofocus/>
+            </div>
+
+            <div class="inputs-row input-image-container">
+                {% if post_remainder and 'image' in post_remainder %} {# for edit-post part #}
+                    <div class="new-image-input-wrapper">
+                        <label for="input-file-id">new Image <br>(leave it if you don't want to change your post image)</label>
+                        <input id="input-file-id" class="input-file" type="file" name="image" accept=".png, .jpg, .jpeg, .webp"/>
+                    </div>
+                    {% if post_remainder['image'] %} {# for edit-post part / if post has image #}
+                        <div class="image-wrapper">
+                            <div>
+                                <img title="post current image" src="/{{ post_remainder['image'] }}"/>
+                            </div>
+                            <div>
+                                <label for="delete-img-chbox">I want my post to be without image</label>
+                                <input id="delete-img-chbox" type="checkbox" title="delete post image for next time after edit" name="delete_img" value="true"/>
+                            </div>
+                        </div>
+                    {% else %} {# for edit-post part / if post doesn't have image #}
+                        <div class="image-wrapper image-wrapper-noimage">
+                            post has no image
+                        </div>
+                    {% endif %}
+                {% else %} {# for write-post part / post image upload input #}
+                    <label for="input-file-id">Image </label>
+                    <input id="input-file-id" class="input-file" type="file" name="image" value="Post Image" accept=".png, .jpg, .jpeg, .webp"/>
+                {% endif %}
+            </div>
+
+            <div class="inputs-row input-preface-container">
+                <span class="info">
+                    Your post preface, If left blank, then part of your content will be choosen for the preface of the post.
+                </span>
+                <span class="length-indicator">0/500</span>
+                <textarea class="input-preface" name="preface" placeholder="Preface" spellcheck="false"></textarea>
+            </div>
+
+            <div class="inputs-row input-content-container">
+                <div class="tools-container">
+                    <button class="tools bold-button" type="button" title="make selected text Bold">B</button>
+                    <button class="tools italic-button" type="button" title="make selected text Italic">I</button>
+                    <button class="tools underline-button" type="button" title="make selected text Underlined">U</button>
+                    <button class="tools link-make-button" type="button" title="make selected text a link">Link</button>
+                </div>
+                
+                <div class="link-make-container">
+                    <div class="selected-text">
+                        <span>Selected text:</span>
+                        <br/>
+                        <span></span>
+                    </div>
+                    <div class="link-address">
+                        <input type="text" title="enter the link address" placeholder="address"/>
+                    </div>
+                    <div class="buttons-container">
+                        <button class="abort-button" type="button" title="make the link">Abort</button>
+                        <button class="add-button" type="button" title="make the link">Add</button>
+                    </div>
+                </div>
+                <textarea class="input-content" name="content" placeholder="Content" spellcheck="false"></textarea>
+            </div>
+            
+            <div class="inputs-row input-tags-container">
+                <span class="info">Choose post tags with maximum number of 5 tags.</span>
+                <span class="info">Write your tag, and then write colon (,) for adding it to the list.</span>
+                <input type="text" name="tags" placeholder="Type your tag" spellcheck="false" autocomplete="off"/>
+
+                <div class="selected-tags-container"></div>
+            </div>
+
+            <div class="inputs-row input-submit-container">
+                <input class="input-submit" type="submit" value="Finish"/>
+            </div>
+        </div>
+    </form>
+
+    <script src="/static/dashboard/write-post/script.js"></script>
+{% endblock content_container %}

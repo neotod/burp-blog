@@ -1,0 +1,85 @@
+form {
+    width: 100%;
+    background-color: white;
+}
+
+.login-register-error {
+    position: relative;
+    top: -23px;
+    z-index: 6;
+}
+
+
+.login-container,
+.register-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0 auto 20px auto;
+    padding: 50px;
+    width: 40%;
+}
+
+
+.login-container .inputs-wrapper,
+.register-container .inputs-wrapper {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.login-container .inputs-wrapper input,
+.register-container .inputs-wrapper input {
+    display: block;
+    font-size: large;
+    padding: 10px;
+    width: 100%;
+    margin-bottom: 20px;
+    box-sizing: border-box;
+
+    position: relative;
+    z-index: 5;
+}
+
+
+.login-container .submit-wrapper,
+.register-container .submit-wrapper {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.login-container .submit-wrapper button,
+.register-container .submit-wrapper button {
+    padding: 10px 20px;
+    flex-grow: 10;
+    font-size: large;
+}
+
+.login-container .submit-wrapper a,
+.register-container .submit-wrapper a {
+    padding: 10px 20px;
+    flex-grow: 2;
+    font-size: large;
+    text-decoration: none;
+}
+
+.login-container .submit-wrapper a:visited,
+.register-container .submit-wrapper a:visited {
+    text-align: black;
+}
+
+@media only screen and (max-width: 1200px){
+    .login-container, .register-container  {
+        padding: 50px 5px !important;
+        width: 80% !important;
+    }
+}
+
+@media only screen and (max-width: 1000px){
+    .login-container, .register-container  {
+        padding: 50px 5px !important;
+        width: 85% !important;
+    }
+}

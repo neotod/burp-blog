@@ -1,0 +1,103 @@
+{% extends 'dashboard/parent.html' %}
+
+{% block head %}
+    {{ super() }}
+    <link rel="stylesheet" type="text/css" href="/static/dashboard/setting/styles.css"/>
+{% endblock head %}
+
+
+{% block content_container %}
+    <form method="POST" action="/dashboard/setting">
+        <div class="setting-wrapper">
+            <div class="setting-row">
+                <div class="setting-column">
+                    <div class="label-wrapper">
+                        <label class="setting-indicator">Name</label>
+                    </div>
+
+                    <div class="input-wrapper">
+                        {% if not edit %}
+                            <input class="setting-input" type="text" name="name" value="{{ user_info['name_'] }}" maxlength="35" disabled/>
+                        {% else %}
+                            <input class="setting-input" type="text" name="name" value="{{ user_info['name_'] }}" maxlength="35"/>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="setting-column">
+                    <div class="label-wrapper">
+                        <label class="setting-indicator">Lastname</label>
+                    </div>
+
+                    <div class="input-wrapper">
+                        {% if not edit %}
+                            <input class="setting-input" type="text" name="lastname" value="{{ user_info['lastname'] }}" maxlength="35" disabled/>
+                        {% else %}
+                            <input class="setting-input" type="text" name="lastname" value="{{ user_info['lastname'] }}" maxlength="35"/>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="setting-row password-row">
+                <div class="setting-column">
+                    <div class="label-wrapper">
+                        {% if not edit %}
+                            <label class="setting-indicator">password</label>
+                        {% else %}
+                            <label class="setting-indicator">New password</label>
+                        {% endif %}
+                    </div>
+
+                    <div class="input-wrapper">
+                        {% if not edit %}
+                            <input class="setting-input" type="password" value="{{ user_info['password_str'] }}" maxlength="50" disabled/>
+                        {% else %}
+                            <input class="setting-input" type="password" name="new_password" maxlength="50"/>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                {% if edit %}
+                    <div class="setting-column">
+                        <div class="label-wrapper">
+                            <label class="setting-indicator">Repeat New password</label>
+                        </div>
+                        <div class="input-wrapper">
+                            <input class="setting-input" type="password" name="rnew_password" maxlength="50"/>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="setting-row">
+                <div class="setting-column email-wrapper">
+                    <div class="label-wrapper">
+                        <label class="setting-indicator">Email</label>
+                    </div>
+
+                    <div class="input-wrapper">
+                        {% if not edit %}
+                            <input class="setting-input" type="email" name="email" value="{{ user_info['email'] }}" maxlength="50" disabled/>
+                        {% else %}
+                            <input class="setting-input" type="email" name="email" value="{{ user_info['email'] }}" maxlength="50"/>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            {% if not edit %}
+                <div class="setting-row button-container">
+                    <div class="setting-column">
+                        <a tilte="Edit your information" href="/dashboard/setting/edit">Edit</a>
+                    </div>
+                </div>
+            {% else %}
+                <div class="setting-row">
+                    <div class="setting-column button-wrapper">
+                        <input type="submit" value="Save"/>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </form>
+{% endblock content_container %}

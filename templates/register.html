@@ -1,0 +1,40 @@
+{% extends 'parent.html' %}
+{% from 'parent.html' import input %}
+
+{% block head %}
+    <title>Register | Burp Blog</title>
+    <link rel="stylesheet" type="text/css" href="/static/login_register/styles.css"/>
+{% endblock head %}
+
+{% block body %}
+    <form method="POST">
+        <div class="register-container">
+            <div class="inputs-wrapper">
+                <div>
+                    <input type="text" name="name" title="Name" placeholder="Name" maxlength="35" autofocus/>
+                </div>
+                <div>
+                    <input type="text" name="lastname" title="Lastname" placeholder="Lastname" maxlength="35"/>
+                </div>
+                <div>
+                    <input type="text" name="username" title="Username" placeholder="Username" maxlength="25"/>
+                </div>
+                <div>
+                    <input type="password" name="password" title="Password" placeholder="Password" maxlength="50"/>
+                </div>
+                <div>
+                    <input type="password" name="r_password" title="Repeat Password" placeholder="Repeat Password" maxlength="50"/>
+                </div>
+                <div>
+                    <input type="email" name="email" title="Email" placeholder="Email" maxlength="50"/>
+                </div>
+            </div>
+            <div class="submit-wrapper">
+                <button type="submit">Submit</button>
+            </div>
+        </div>
+    </form>
+
+    <script type="text/javascript" src="/static/login_register/c_script.js"></script>
+    <script type="text/javascript" src="/static/login_register/r_script.js"></script>
+{% endblock body %}

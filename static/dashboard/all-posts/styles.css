@@ -1,0 +1,194 @@
+.referrer-link-wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    background-color: white;
+    color: black;
+    padding: 50px;
+    text-align: center;
+
+    font-size: large;
+
+    margin: 20px 0;
+}
+
+.referrer-link-wrapper > div {
+    height: 50px;
+}
+
+.referrer-link-wrapper a {
+    padding: 10px;
+    background-color: gray;
+    color: white;
+}
+
+
+.content-container {
+    padding: 20px 30px;
+}
+
+.all-posts-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.mini-post-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-content: stretch;
+
+    background-color: white;
+    margin: 0 30px 30px 0;
+
+    max-width: 40%;
+    box-sizing: border-box;
+}
+
+
+.parent-link {
+    display: inline-block;
+    flex-basis: 100%;
+}
+
+
+.mini-post-wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    height: 100%;
+}
+
+
+.mini-post-content {
+    width: auto;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    flex-basis: 80%;
+
+    box-sizing: border-box;
+
+    padding: 20px 30px;
+}
+
+
+.mini-post-subject {
+    box-sizing: border-box;
+
+    width: 100%;
+    text-align: left !important;
+}
+
+
+.mobile-mini-post-subject {
+    display: none;
+}
+
+
+.mini-post-metadata {
+    text-align: right;
+}
+
+
+.mini-post-image {
+    align-self: stretch;
+    text-align: center;
+
+    background-color: rgba(128, 128, 128, 0.36);
+}
+
+.mini-post-image img {
+    width: 100%;
+}
+
+.mini-post-image span {
+    display: inline-block;
+}
+
+
+.mini-post-tags {
+    align-self: center;
+}
+
+
+.mini-post-subject {
+    align-self: center;
+    margin-bottom: 20px;
+}
+
+
+.mini-post-timestamp {
+    align-self: center;
+}
+
+
+.mini-post-options {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+.mini-post-options > div {
+    flex-basis: 50%;
+    text-align: center;
+    font-size: large;
+    font-weight: 700;
+}
+
+.mini-post-options .edit-button-wrapper a, .mini-post-options .delete-button-wrapper a {
+    display: inline-block;
+    width: 100%;
+    box-sizing: border-box;
+    color: white;
+    padding: 1px;
+}
+
+.mini-post-options .edit-button-wrapper a {
+    background-color: rgba(0, 230, 54, 0.53);
+}
+
+.mini-post-options .edit-button-wrapper a:hover {
+    background-color: rgba(0, 230, 54);
+}
+
+.mini-post-options .delete-button-wrapper a {
+    background-color: rgba(255, 0, 0, 0.456);
+}
+
+.mini-post-options .delete-button-wrapper a:hover {
+    background-color: rgba(255, 0, 0);
+}
+
+
+@media only screen and (max-width: 900px) {
+    .content-container {
+        padding: 5px !important;
+    }
+
+    .referrer-link-wrapper {
+        padding: 50px 10px !important;
+        font-size: medium !important;
+    }
+
+    .all-posts-container {
+        flex-direction: column;
+        justify-content: center;
+        padding: 20px 10px !important;
+    }
+
+    .mini-post-content {
+        padding: 10px 20px;
+    }
+
+    .mini-post-container {
+        margin: 30px 0;
+        max-width: 100%;
+    }
+}

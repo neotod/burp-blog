@@ -1,0 +1,23 @@
+{% extends 'parent.html' %}
+
+{% block head %}
+    <link rel="stylesheet" type="text/css" href="/static/dashboard/parent/styles.css"/>
+    <script src="/static/dashboard/parent/script.js"></script>
+    <title>Dashboard | Burp Blog</title>
+{% endblock head %}
+
+{% block body %}
+    <div class="content-container">
+        {% block content_container %}
+        {% endblock content_container %}
+    </div>
+
+    <div class="navbar-container">
+        <ul>
+            <li><a tilte="Write a new post." href="/dashboard/write-post">New post</a></li>
+            <li><a title="List of your posts till now." href="/dashboard/all-posts">All posts</a></li>
+            <li><a title="Setting" href="/dashboard/setting">Setting</a></li>
+        </ul>
+    </div>
+
+{% endblock body %}

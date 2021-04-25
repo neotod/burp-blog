@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta name="viewport" content="width=device-width, inital-scale=0.1"/>
+        <link rel="stylesheet" type="text/css" href="/static/parent/styles.css"/>
+        <script src="https://kit.fontawesome.com/e3ecbbe55c.js" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+        {% block head %}
+        {% endblock head %}
+    </head>
+    <body>
+        <header>
+            <div class="header-wrapper">
+                <div class="logo-wrapper">
+                    <a title="Home" href="/">
+                        <img alt="Logo" src="/images/doge.jpg"/>
+                        <span>BURP BLOG</span>
+                    </a>
+                </div>
+                <div class="navbar-wrapper">
+                    <nav>
+                        <div class="search-bar">
+                            <form action="/search">
+                                <div class="input-wrapper">
+                                    <input type="search" name="search_inp" title="Type something" placeholder="Enter something for search..."/>
+                                </div>
+                                <div class="submit-wrapper">
+                                    <button type="submit" title="Search"><i class="fas fa-search"></i></button>
+                                </div>
+                            </form>
+
+                            <div class="result-container">
+                                <div class="result-header">
+                                    <span class="innertext">Result</span>
+                                    <span class="disapear-button">[x]</span>
+                                </div>
+                                <div class="result-main"></div>
+                            </div>
+                        </div>
+                        <div class="links-bar">
+                            <a title="Archive" href="/">Archive</a>
+                        </div>
+                    </nav>
+                </div>
+                <div class="user-wrapper">
+                    <ul>
+                        {% if not user_fullname %}
+                            <li><a tilte="Login" href="/login">Login / Register</a></li>
+                        {% else %}
+                            <li>
+                                <span class="user-name">
+                                    <ul>
+                                        <li><a title="Dashboard" href="/dashboard">Dashboard</a></li>
+                                        <li><a title="Logout" href="/logout">Logout</a></li>
+                                    </ul>
+                                </span>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+            <div class="mobile-search-bar">
+                <form action="/search">
+                    <div class="input-wrapper">
+                        <input type="search" title="Type something" name="search-inp" placeholder="Enter something for search..."/>
+                    </div>
+                    <div class="submit-wrapper">
+                        <button type="submit" title="Search"><i class="fas fa-search"></i></button>
+                    </div>
+                </form>
+            </div>
+        </header>
+        
+        <main>
+            <span class="page-indicator">>> {{ page_name }}</span>
+            <div class="main-container">
+                {% with messages = get_flashed_messages(with_categories=True) %}
+                {% if messages %}
+                    {% if messages[0][0] == 'ok' %}
+                        <div class="flashes-container errors-container" style="background-color: rgb(0, 209, 7);">
+                    {% else %}
+                        <div class="flashes-container errors-container" style="background-color: rgb(209, 0, 0);">
+                    {% endif %}
+                            <span class="disappear-button">[x]</span>
+                            <ul>
+                                {% for category, msg in messages %}
+                                    <li>{{ msg }}</li>
+                                {% endfor %}
+                            </ul>
+                            <span class="show-timer"></span>
+                        </div>
+                {% endif %}
+                {% endwith %}
+                
+                {% block body %}
+                {% endblock body %}
+            </div>
+        </main>
+        <footer>
+            <div class="footer-container">
+                <div class="footer-wrapper">
+                    <span class="footer-text">Designed by me :)</span>
+                    <span class="footer-goup"><a href="#" title="Go up biatch">Back to the begin!</a></span>
+                </div>
+            </div>
+        </footer>
+
+        <script type="text/javascript" src="/static/parent/script.js"></script>
+    </body>
+</html>
+
+<!--macros-->
+{% macro input(type, name, placeholder, title, maxlength, required=True, autofocus=False) %}
+    {% if required and autofocus %}
+        <input type="{{ type }}" name="{{ name }}" placeholder="{{ placeholder }}" title="{{ title }}" maxlength="{{ maxlength }}" required autofocus/>
+    {% elif required %}
+        <input type="{{ type }}" name="{{ name }}" placeholder="{{ placeholder }}" title="{{ title }}" maxlength="{{ maxlength }}" required/>
+    {% elif autofocus %}
+        <input type="{{ type }}" name="{{ name }}" placeholder="{{ placeholder }}" title="{{ title }}" maxlength="{{ maxlength }}" autofocus/>
+    {% else %}
+        <input type="{{ type }}" name="{{ name }}" placeholder="{{ placeholder }}" title="{{ title }}" maxlength="{{ maxlength }}"/>
+    {% endif %}
+{% endmacro %}

@@ -1,0 +1,105 @@
+{% extends 'parent.html' %}
+
+{% block head %}
+    <title>Home | Burp Blog</title>
+    <link rel="stylesheet" type="text/css" href="/static/index/styles.css"/>
+{% endblock head %}
+
+{% block body %}
+    <div class="posts-wrapper">
+        <span class="posts-indicator">>> latest posts</span>
+        {% if posts %}
+            {% for post in posts %}
+                {% if loop.first %}
+                <article class="last-article">
+                {% else %}
+                <article>
+                {% endif %}
+                    <div class="post-container">
+                        {% if post.image_url %}
+                            <div class="image-wrapper">
+                                <a title="{{ post.subject }}" href="{{ post.url|e }}" style="background-image: url({{ post.image_url|e }});">
+                                    <!-- <img src=""/> -->
+                                </a>
+                            </div>
+                        {% endif %}
+                        <div class="post-main-wrapper">
+                            <div class="post-subject">
+                                <h2>{{ post.subject }}</h2>
+                            </div>
+                            <div class="post-preface">
+                                <pre>
+{{ post.preface }}
+                                    {#
+                                    {% for text, type in post.preface %}
+                                        {% if type == 'plain' %}
+                                            <span class="plain-text">{{ text }}</span>
+                                        {% elif type == 'italic' %}
+                                            <span class="italic-text">{{ text }}</span>
+                                        {% elif type == 'bold' %}
+                                            <span class="bold-text">{{ text }}</span>
+                                        {% endif %}
+                                    {% endfor %}
+                                    #}
+                                <pre>
+                            </div>
+                        </div>
+                        <div class="post-footer-wrapper">
+                            <div class="post-information-wrapper">
+                                <div class="post-author-wrapper">
+                                    <span class="post-author">{{ post.author }}</span>
+                                </div>
+                                <div class="post-tags-wrapper">
+                                    {% for tag in post.tags %}
+                                        {% set tag_name = tag %}
+                                        {% if not loop.last %}
+                                            {% set tag_name = tag_name + ', ' %}
+                                        {% endif %}
+                                        <span class="post-tag">
+                                            <a title="more posts with {{ tag }} category" href="/?tag={{ tag|lower }}"> {{ tag_name | capitalize }} </a>
+                                        </span>
+                                    {% endfor %}
+                                </div>
+                                <div class="post-timestamp-wrapper">
+                                    <span class="post-timestamp">{{ post.timestamp|e }}</span>
+                                </div>
+                            </div>
+                            <div class="post-continue-wrapper">
+                                <a title="Continue reading {{ post.subject }}" href="{{ post.url|e }}">Continue...</a>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            {% endfor %}
+        {% endif %}
+
+        <div class="pages-wrapper">
+            <div class="pages-text">>> pages</div>
+            <div class="pages-form">
+                <form id="main-form" action="/">
+                {% if pages_num %}
+                    {% for num in range(1, pages_num+1) %}
+                        {% if num == curpage %}
+                            <button class="curpage pages_btn" type="submit" name="page" value="{{ num }}" title="Page {{ num }}" disabled>{{ num }}</button>
+                        {% else %}
+                            <button class="pages_btn" type="submit" name="page" value="{{ num }}" title="Page {{ num }}">{{ num }}</button>
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="tags-wrapper">
+        <div class="tags-indicator">
+            <span>>> categories</span>
+        </div>
+        <div class="tags-main">
+            {% for tag, size in tags %}
+                <span class="tags">
+                    <input type="submit" name="tag" value="{{ tag|lower }}" style="font-size: {{ 15+size }}px;" title="{{ tag }}" form="main-form"/>
+                </span>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock body %}

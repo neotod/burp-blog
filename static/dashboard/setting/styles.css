@@ -1,0 +1,136 @@
+.content-container {
+    padding: 20px 100px;
+}
+
+.setting-wrapper {
+    background-color: white;
+    padding: 20px 50px;
+    display: flex;
+    flex-direction: column;
+    font-size: large !important;
+}
+
+.setting-row {
+    margin: 20px 0;
+    height: 100%;
+    display: flex;
+    flex-direction: row;
+}
+
+
+
+.setting-wrapper .setting-row:last-child .setting-column {
+    flex-basis: 100%;
+}
+
+.setting-column {    
+    height: 100%;
+    flex-basis: 50%;
+}
+
+.setting-column > div {
+    display: inline-block;
+}
+
+.setting-column .label-wrapper {
+    width: 35%;
+}
+
+.setting-column .input-wrapper, .setting-column .text-wrapper {
+    width: 62%;
+    margin-left: -11px;
+}
+
+.setting-column .text-wrapper {
+    padding: 9px 10px;
+    border: solid gray 1px;
+}
+
+.setting-column .input-wrapper input {
+    padding: 7px 10px;
+    margin-left: 5px;
+
+    box-sizing: border-box;
+    font-size: large;
+    font-family: comicsans;
+    width: 100%;
+}
+
+.setting-column .input-wrapper input[disabled] {
+    color: black;
+    background-color: white
+}
+
+
+.label-wrapper label {
+    display: inline-block;
+    padding: 10px 20px;
+
+    box-sizing: border-box;
+    width: 100%;
+
+    background-color: gray;
+    color: white;
+}
+
+
+.button-container {
+    text-align: right;
+}
+
+.button-container a, .button-wrapper input {
+    padding: 10px 50px !important;
+    font-size: large !important;
+    font-family: comicsans !important;
+    border: 0 !important;
+    background-color: gray;
+    color: white;
+}
+
+.button-container a {
+    text-decoration: none;
+}
+
+.setting-wrapper .setting-row:last-child a:visited {
+    color: white;
+}
+
+
+.button-wrapper {
+    text-align: right;
+}
+
+.button-wrapper input{
+    padding: 5px 30px;
+}
+
+@media only screen and (max-width: 1200px) {
+    .setting-wrapper {
+        padding: 20px 20px;
+    }
+
+    .setting-row {
+        display: block;
+        margin: 5px 0 !important;
+    }
+
+    .setting-column {
+        width: 100%;
+        margin: 10px 0 !important;
+
+    }
+
+    .setting-column .label-wrapper {
+        width: 25%;
+    }
+
+    .setting-column .input-wrapper {
+        width: 75%;
+    }
+}
+
+@media only screen and (max-width: 700px) {
+    .content-container {
+        padding: 20px 20px !important;
+    }    
+}

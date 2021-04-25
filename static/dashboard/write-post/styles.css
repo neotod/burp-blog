@@ -1,0 +1,256 @@
+.inputs-wrapper {
+    display: flex;
+    flex-direction: column;
+}
+
+.inputs-wrapper input, .inputs-wrapper textarea {
+    padding: 10px 10px;
+    width: 100%;
+    box-sizing: border-box;
+    font-size: large;
+    display: inline-block;
+    font-family: comicsans;
+    z-index: 5;
+}
+
+
+.inputs-row {
+    margin: 10px 0;
+}
+
+.inputs-row .length-indicator {
+    display: none;
+
+    position: absolute;
+
+    z-index: 4;
+    background-color: white;
+    color: black;
+    padding: 12px 5px;
+    box-sizing: border-box;
+
+    font-size: x-small;
+    font-weight: bold;
+}
+
+.inputs-row .info {
+    color: white;
+    padding: 5px 0;
+}
+
+
+.input-subject {
+    padding-right: 60px !important;
+}
+
+
+.input-preface {
+    resize: vertical;
+    min-height: 100px;
+    max-height: 200px;
+    height: 150px;
+
+    padding-bottom: 30px !important;
+}
+
+.input-tags-container .selected-tags-container {
+    display: flex;
+    flex-wrap: wrap;
+
+    padding: 5px 0;
+    width: 100%;
+}
+
+.input-tags-container .selected-tags-container > span {
+    padding: 10px;
+    background-color: white;
+    color: black;
+
+    margin-right: 5px;
+
+    cursor: pointer;
+}
+
+
+.tools-container {
+    background-color: white;
+    display: flex;
+    padding: 10px;
+
+    border-bottom: 5px solid gray;
+}
+
+.tools {
+    font-size: large;
+    padding: 5px 10px;
+    margin: 0 5px;
+}
+
+.tools-container .bold-tool {
+    font-weight: bold;
+}
+
+.tools-container .italic-tool {
+    font-style: italic;
+}
+
+.tools-container .underline-tool {
+    text-decoration: underline;
+}
+
+.tools-container .link-make-button {
+    margin-left: 20px;
+}
+
+
+.input-content-container .link-make-container {
+    border: 2px solid white;
+    border-top: none;
+    
+    box-sizing: border-box;
+
+    padding: 10px;
+    
+    background-color: gray;
+    color: white;
+    font-size: small;
+
+    position: absolute;
+    
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.input-content-container .link-make-container .selected-text {
+    flex-basis: 20%;
+    margin-right: 10px;
+}
+
+.input-content-container .link-make-container .link-address {
+    margin: 10px 0;
+    flex-basis: 65%;
+}
+
+.input-content-container .link-make-container .link-address input {
+    font-size: 13px;
+    width: 100%;
+}
+
+.input-content-container .link-make-container .buttons-container {
+    flex-basis: 10%;
+    display: flex;
+}
+
+.input-content-container .link-make-container .buttons-container button {
+    height: 30px;
+    margin: 0 10px;
+}
+
+.input-content-container .link-make-container .buttons-container button.add-button {
+    flex-basis: 40%;
+}
+
+
+.input-content {
+    display: inline-block;
+    background-color: white;
+    padding: 20px;
+    box-sizing: border-box;
+
+    resize: vertical;
+    min-height: 200px;
+    max-height: 1000px;
+    height: 400px;
+    width: 100%;
+}
+
+.inputs-wrapper span.i {
+    font-size: medium;
+    color: white;
+}
+
+.input-image-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.input-image-container label {
+    color: white;
+    font-size: x-large;
+}
+
+.input-image-container .image-wrapper label {
+    font-size: large;
+}
+
+.input-image-container .image-wrapper input {
+    width: 15px;
+    height: 15px;
+}
+
+.input-image-container .new-image-input-wrapper {
+    flex-basis: 30%;
+}
+
+.input-image-container .image-wrapper {
+    flex-basis: 65%;
+    text-align: center;
+    margin-bottom: 30px;
+
+    color: white;
+}
+
+.input-image-container .image-wrapper img {
+    width: 100%;
+}
+
+
+.input-image-container .image-wrapper-noimage {
+    border: 2px solid white;
+    padding: 10px 30px;
+}
+
+
+.input-submit-container {
+    text-align: right;
+}
+
+.input-submit-container input {
+    width: 200px;
+}
+
+
+.flashes-container {
+    padding: 10px 5px;
+    color: white;
+}
+
+
+.input-error {
+    position: relative;
+    top: -5px;
+    z-index: 2;
+    opacity: 0.9;
+}
+
+
+@media only screen and (max-width: 1300px) {
+    .input-image-container {
+        display: block !important;
+    }
+
+    .input-image-container .new-image-input-wrapper {
+        width: 100%;
+        margin-bottom: 20px;
+    }
+
+}
+
+@media only screen and (max-width: 800px) {
+    .input-content-container .link-make-container {
+        flex-direction: column;
+    }
+}
