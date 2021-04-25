@@ -1,0 +1,4 @@
+[mysql]
+database=db_name
+user=user
+password=password
