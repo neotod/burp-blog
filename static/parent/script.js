@@ -37,7 +37,7 @@ function show_search_result(result) {
         post_div.addClass('post-result')
 
         image_div.addClass('image-wrapper')
-        image_div.css('background-image', `url(/${post_info.image_url})`)
+        image_div.css('background-image', `url(${post_info.image_url})`)
         
         subject_div.addClass('subject-div')
         subject_div.text(post_info.subject)
@@ -114,8 +114,6 @@ function search() {
 function toggle_search_result(event) {
     let result_container = $('.search-bar .result-container')
     let search_inp = $('.search-bar .input-wrapper input')
-
-    console.log('hi')
     
     if (event.type == 'focus' && search_inp.val() == '') {
         let search_bar_width = $('.search-bar').width()
@@ -146,7 +144,6 @@ function change_elements_size(event) {
 
 if (flashes_container) {
     let show_timer = flashes_container.find('.show-timer')
-    console.log(show_timer.width())
 
     let interval_id = setInterval(function() {
         show_timer.width(parseInt(show_timer.width()) - 0.5 + 'px')
