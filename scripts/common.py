@@ -6,14 +6,26 @@ from time import time
 from sys import exc_info
 from hashlib import sha256
 from os import remove, path
-from flask import Flask, session
+
 from scripts.database_stuff import Db_Functions
 from mysql.connector import connect, Error, MySQLConnection
+
+from werkzeug.utils import secure_filename
+from werkzeug.datastructures import FileStorage
+
+from flask import Flask, session
+import flask_uploads as fu
 
 class Burp_Blog:
     def __init__(self):
         self.app = Flask('__main__') # check the arguments
         self.app.secret_key = b'\x8c\xc1\x070\xc3\xd5\xa6\xed\x0b\xd0\xa2\xa0s\xd1Z'
+        self.app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024 # 2MB
+        self.app.config['UPLOADED_IMAGES_DEST'] = '/images'
+
+        self.images_uploadset = fu.UploadSet('images', fu.IMAGES)
+        fu.configure_uploads(self.app, self.images_uploadset)
+
         self.app.jinja_env.autoescape = False
 
         self.db_connection = self.connect_to_db()
@@ -69,7 +81,7 @@ class Burp_Blog:
         p_preface = row[2]
         p_content = row[3]
         p_image_id = row[4]
-        p_timestamp = row[5]
+        p_timestamp = str(row[5])
 
         if p_image_id != None:
             statement = f'''
@@ -81,7 +93,7 @@ class Burp_Blog:
             result = cursor.fetchall()
 
             row = result[0]
-            p_image_url = 'images'+ f'/{row[0]}'
+            p_image_url = '/images'+ f'/{row[0]}'
 
         else:
             p_image_url = None # post doesn't have an image
@@ -171,14 +183,14 @@ class Burp_Blog:
                 pass
         
         Db_Functions.set_foreign_key_check(self.db_connection, False)
-        Db_Functions.delete_from_table(self.db_connection, 'posts_cats', {'post_id': post_id}, True, 'post_id')
+        Db_Functions.delete_from_table(self.db_connection, 'posts_cats', {'post_id': post_id}, 'post_id')
 
         statement = f'''
         DELETE FROM images WHERE id = (SELECT image_id FROM posts WHERE id = {post_id});
         '''
         cursor.execute(statement)
 
-        Db_Functions.delete_from_table(self.db_connection, 'posts', {'id': post_id}, True, 'id')
+        Db_Functions.delete_from_table(self.db_connection, 'posts', {'id': post_id}, 'id')
         Db_Functions.set_foreign_key_check(self.db_connection, True)
 
         cursor.close()
@@ -219,12 +231,12 @@ class Burp_Blog:
 
                 else: # user wants to delete post image
                         Db_Functions.set_foreign_key_check(self.db_connection, False)
-                        Db_Functions.delete_from_table(self.db_connection, 'images', {'id': image_id}, True, 'id')
+                        Db_Functions.delete_from_table(self.db_connection, 'images', {'id': image_id}, 'id')
                         Db_Functions.update_table(self.db_connection, 'posts', {'image_id': None}, {'id': post_id})
                         Db_Functions.set_foreign_key_check(self.db_connection, True)
         
             elif 'tags' == changed_part:
-                Db_Functions.delete_from_table(self.db_connection, 'posts_cats', {'post_id': post_id}, True, 'post_id')
+                Db_Functions.delete_from_table(self.db_connection, 'posts_cats', {'post_id': post_id}, 'post_id')
 
                 for tag in changed_parts['tags']:
                     tag_id = self.get_tag_id(tag)
@@ -480,6 +492,22 @@ class Burp_Blog:
 
         cursor.close()
         return posts
+
+    def save_file(self, filestorage: FileStorage, save_path: str, valid_type: str):
+        filename = secure_filename(filestorage.filename)
+
+        valid_types_list = []
+        if valid_type == 'image':
+            valid_types_list = fu.IMAGES
+        elif valid_type == 'audio':
+            valid_types_list = fu.AUDIO
+
+        filetype = filename.split('.')[-1]
+        if filetype in valid_types_list:
+            save_path = path.join(save_path, filename)
+            filestorage.save(save_path)
+        else:
+            raise fu.UploadNotAllowed
     
     def get_result_gen(self, cursor):
         while True:

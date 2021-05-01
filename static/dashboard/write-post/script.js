@@ -1,3 +1,7 @@
+let inputs = null
+let current_post = null
+let image_upload_file = null
+let is_any_part_changed = false
 let content_selection_indices = []
 
 function show_error_span(elem, error, input_lock) {
@@ -282,8 +286,6 @@ function link_buttons_click(event) {
 
 function form_submit(event) {
     event.preventDefault()
-
-    let inputs          = $('.inputs-row > input, .inputs-row > textarea')
     let required_inputs = inputs.not('[name=tags], [name=image], [name=preface]')
     let tags_spans      = $('.input-tags-container .selected-tags-container > span')
     let scrollto_elem   = null
@@ -337,6 +339,45 @@ function form_submit(event) {
     }
 
 
+    if (location.href.includes('edit')) {
+        if (!is_any_part_changed) { // if user tried to change the post image before, then is_any_part_change becomes true
+            let subject_val = inputs.filter('input[name=subject]').val()
+            let preface_val = inputs.filter('input[name=subject]').val()
+            let content_val = inputs.filter('input[name=subject]').val()
+
+            if (subject_val != current_post.subject) is_any_part_changed = true
+            else if (preface_val != current_post.preface) is_any_part_changed = true
+            else if (content_val != current_post.content) is_any_part_changed = true
+
+            if (!is_any_part_changed) {
+                let current_image_url = $('.input-image-container .image-wrapper img').prop('src')
+                let post_image_url    = current_post.image_url
+                
+                if (current_image_url != post_image_url) is_any_part_changed = true
+
+                if (!is_any_part_changed) {
+                    let post_tags           = new Set(current_post.tags)
+                    let selected_tags_spans = $('.input-tags-container .selected-tags-container > span')
+
+                    selected_tags_spans.each(function(index) {
+                        let tag = $( this ).text()
+                        if (!post_tags.has(tag)) {
+                            is_any_part_changed = true
+                            return false
+                        }
+                    })
+                }
+            }
+        }
+
+        if (!is_any_part_changed) {
+            let submit_button = inputs.eq(5)
+            let error_text    = "Couldn't find any change in your post, please try to change something and sumbit again."
+            show_error_span(submit_button, error_text, false)
+        }
+    }
+
+
     if (scrollto_elem) {
         scrollto_elem.get(0).scrollIntoView()
     } 
@@ -351,7 +392,7 @@ function form_submit(event) {
         form_data.set('tags', selected_tags)
 
         let req = $.ajax({
-            url: '/dashboard/write-post',
+            url: location.pathname,
             method: 'POST',
             data: form_data,
             processData: false,
@@ -359,14 +400,45 @@ function form_submit(event) {
         })
 
         req.done(function(data) {
-            inputs.val('')
-            tags_spans.remove()
-            location.reload()
+            if (location.href.includes('edit')) {
+                location.href = location.origin + '/dashboard/all-posts'
+            }
+            else {
+                inputs.val('')
+                tags_spans.remove()
+                location.reload()
+            }
         })
-        req.fail(function(data) {
-            let submit_container = $('input-submit-container input')
-            let error_text       = 'Sorry, there is a problem with the server now, please refersh the page and write your post again (you should copy your text first).'
-            show_error_span(submit_container, error_text, false)
+        req.fail(function(jqxhr, status, error) {
+            let error_text           = ''
+            let remove_current_image = true
+            let show_error_elem      = null
+            
+            if (jqxhr.status == 403) {
+                error_text = 'Please provide a image-kind file for your post image (files with extenstions like .png .jpg .jpeg)'
+                show_error_elem = $('.input-image-container .buttons-container').children().eq(3)
+            }
+            else if (jqxhr.status == 413) {
+                error_text = 'Please provide a file with less than 2MegaBytes size.'
+                show_error_elem = $('.input-image-container .buttons-container').children().eq(3)
+            }
+            else {
+                error_text = 'Sorry, there is a problem with the server now, try submit again or refersh the page and write your post again (you had better to have a copy of your post first).'
+                show_error_elem = $('.input-submit-container')
+                remove_current_image = false
+            }
+
+            if (remove_current_image) {
+                let image_wrapper = $('.input-image-container .image-wrapper')
+                let image_input   = inputs.filter('input[name=image]')
+
+                image_wrapper.children().eq(0).prop('src', '/images/not-found.png')
+                image_input.val('')
+            }
+
+
+            show_error_elem.get(0).scrollIntoView()
+            show_error_span(show_error_elem, error_text, false)
         })
     }
 }
@@ -378,9 +450,116 @@ function elements_resize() {
     $('.input-content-container .link-make-container').width(content_textarea.width())
 }
 
+function upload_input_change(event) {
+    let input_elem          = event.target
+    let file                = input_elem.files[0]
+    let image_wrapper       = $('.input-image-container .image-wrapper')
+    let image_remove_btn    = $('.input-image-container .buttons-container button:nth-child(4)')
+    let image_upload_chbox  = $('.input-image-container input[name=remove_image]')
+
+    let image_src = URL.createObjectURL(file)
+    image_wrapper.children().eq(0).prop('src', image_src)
+
+    image_upload_file = file
+    image_remove_btn.prop('disabled', false)
+
+    is_any_part_changed = true
+    image_upload_chbox.prop('checked', false)
+}
+
+function image_upload_buttons_click(event) {
+    let elem              = $(event.target)
+    let upload_file_input = $('.input-image-container .buttons-container > input')
+    
+    if (elem.text() == 'Upload photo') {
+        upload_file_input.click()
+    }
+    else if (elem.text() == 'Remove photo') {
+        let image_wrapper       = $('.input-image-container .image-wrapper')
+        let image_upload_chbox  = $('.input-image-container input[name=remove_image]')
+
+        upload_file_input.val('')
+        $(image_wrapper.children().eq(0)).prop('src', '/images/not-found.png')
+
+        image_upload_file = null
+        elem.prop('disabled', true)
+
+        image_upload_chbox.prop('checked', true)
+    }
+
+    if (elem.next().prop('tagName') == 'SPAN') elem.next().remove()
+}
+
+function fill_inputs() {
+    let image_wrapper           = $('.input-image-container .image-wrapper')
+    let subject_input           = $('.inputs-row input[name=subject]')
+    let preface_textarea        = $('.inputs-row textarea[name=preface]')
+    let content_textarea        = $('.inputs-row textarea[name=content]')
+    let selected_tags_container = $('.input-tags-container .selected-tags-container')
+    
+    subject_input.val(current_post.subject)
+    preface_textarea.val(current_post.preface)
+    content_textarea.val(current_post.content)
+    
+    if (current_post.image_url) image_wrapper.children().eq(0).prop('src', current_post.image_url)
+    else {
+        image_wrapper.children().eq(0).prop('src', '/images/not-found.png')
+        
+        $('.input-image-container .buttons-container button:nth-child(4)').prop('disabled', true)
+    }
+
+    selected_tags_container.html('')
+    for (tag of current_post.tags) {
+        let tag_span = $('<span/>')
+        tag_span.text(tag)
+        tag_span.prop('title', 'Click to discard the tag')
+
+        selected_tags_container.append(tag_span)
+    }
+
+    document.documentElement.scrollIntoView()
+    is_any_part_changed = false
+}
+
+function retrieve_post() {
+    let post_id     = location.href.split('/').slice(-1)[0]
+    let post_data   = new FormData()
+    post_data.append('post_id', post_id)
+
+    let ajax = $.ajax({
+        url: '/jsquery/post',
+        method: 'POST',
+        data: post_data,
+        contentType: false,
+        processData: false
+    })
+
+    ajax.done(function(data) {
+        current_post = JSON.parse(data)
+        fill_inputs()
+    })
+
+    ajax.fail(function() {
+        error_msg = "Something's wrong on retrieving your post from server, please try again."
+
+        post_data = new FormData()
+        post_data.append('msg', error_msg)
+        
+        flash_ajax = $.ajax({
+            url: '/jsquery/flash',
+            method: 'POST',
+            data: post_data,
+            contentType: false,
+            processData: false
+        })
+        location.reload()
+    })
+}
+
 
 $(document).ready(function() {
-    let inputs              = $('.inputs-row > input, .inputs-row > textarea')
+    inputs = $('.inputs-row > input, .inputs-row > textarea')
+
     let subject_input       = $('.inputs-row input[name=subject]')
     let preface_textarea    = $('.inputs-row textarea[name=preface]')
     let tags_input          = $('.inputs-row input[name=tags]')
@@ -388,12 +567,16 @@ $(document).ready(function() {
     let tools_buttons       = $('.tools-container .tools')
     let link_make_buttons   = $('.input-content-container .link-make-container .buttons-container button')
     let link_make_container = $('.input-content-container .link-make-container')
+    let image_upload_btns   = $('.input-image-container .buttons-container button')
+    let image_upload_inp    = $('.input-image-container input[name=image]')
+    let image_upload_chbox  = $('.input-image-container input[name=remove_image]')
+    let back_to_default_btn = $('.input-submit-container input:nth-child(1)')
+    let main_form           = $('.main-container form')
 
     let filter_func = function(index) { return $(this).prop('name') != 'content' }
     let valid_chars = 'abcdefghijklmnopqrstuvwxyz0123456789_.,:; '
 
     subject_input   .on('input', () => check_for_invalid_chars(subject_input, valid_chars))
-    preface_textarea.on('input', preface_input)
     tags_input      .on('input', tags_change)
     
     inputs.on('input', universal_input_change)
@@ -404,14 +587,22 @@ $(document).ready(function() {
     inputs.filter(filter_func).on('paste', input_keypress)
     
     content_textarea.select(content_text_select)
-    tools_buttons    .click(tools_click)
+    tools_buttons.click(tools_click)
     link_make_buttons.click(link_buttons_click)
+    back_to_default_btn.click(fill_inputs)
 
-    $('.main-container form').on('submit', form_submit)
+    image_upload_inp.on('change', upload_input_change)
+    image_upload_inp.hide()
+    image_upload_chbox.hide()
+
+    main_form.on('submit', form_submit)
 
     link_make_container.width(content_textarea.width())
     link_make_container.hide()
 
+    image_upload_btns.click(image_upload_buttons_click)
+    image_upload_btns.eq(1).prop('disabled', true)
+    
     // micelaneous event bindings
     $('.input-content-container .link-make-container .link-address input').keydown(function(event) {
         if (event.code == 'Enter') {
@@ -420,7 +611,17 @@ $(document).ready(function() {
             event.preventDefault()
         }
     })
-
-
+    
+    
     $(window).on('resize', elements_resize)
+    
+    // below is for the edit-post part
+    if (location.href.includes('edit')) {
+        let post_id = location.pathname.split('/').slice(-1)[0]
+        
+        retrieve_post()
+        main_form.prop('action', '/dashboard/all-posts/edit-post/' + post_id)
+        
+        image_upload_btns.eq(1).prop('disabled', false)
+    }
 })

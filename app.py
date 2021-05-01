@@ -1,15 +1,30 @@
 import json
 from time import sleep, time
-from os import path, remove
+from os import path, remove, curdir
+
+from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.utils import secure_filename
+
 from mysql.connector import Error as mysql_error
-from flask import Flask, render_template, redirect, request, flash, session, abort, url_for, make_response
+
+from flask import ( Flask,
+                    render_template, 
+                    make_response,
+                    redirect, 
+                    url_for, 
+                    request, 
+                    session, 
+                    flash, 
+                    abort, 
+                )
+
+from flask_debugtoolbar import DebugToolbarExtension
 
 from scripts import urls
-from scripts.common import Burp_Blog, Post
+from scripts.common import *
 from scripts.database_stuff import Db_Functions
 
-from http.client import TEMPORARY_REDIRECT, NOT_FOUND
+from http.client import TEMPORARY_REDIRECT, NOT_FOUND, REQUEST_ENTITY_TOO_LARGE, FORBIDDEN
 
 burp = Burp_Blog()
 
@@ -140,7 +155,7 @@ def dashboard_get_allposts():
     return render_template(template_address, posts=posts_, page_name=page_name_, user_fullname=user_fullname_)
 
 
-@burp.app.route(urls.DASHBOARD_ALLPOSTS_ACTIONS)
+@burp.app.route(urls.DASHBOARD_ALLPOSTS_ACTIONS, methods=['GET'])
 def dashboard_get_allposts_actions(action, post_id):
     if 'user' in session:
         user_fullname_ = session['user'][1]
@@ -153,7 +168,7 @@ def dashboard_get_allposts_actions(action, post_id):
     user_posts_ids = tuple([post.id for post in user_posts])
 
     if int(post_id) not in user_posts_ids:
-        abort(404)
+        abort(NOT_FOUND)
         
 
     if 'edit' in action: # action is "edit-post"
@@ -240,11 +255,16 @@ def dashboard_post_writepost():
     username = session['user'][0]
 
     if request.files['image']:
-        image_file = request.files['image']
-        s_imagename = secure_filename(image_file.filename)
-        file_save_path = path.join('images', s_imagename)
-        image_file.save(file_save_path)
+        try:
+            # burp.images_uploadset.save(request.files['image'] ## for some weird reasons, this won't work somethimes
+            burp.save_file(request.files['image'], 'images', 'image')
 
+        except fu.UploadNotAllowed:
+            abort(FORBIDDEN)
+        except RequestEntityTooLarge:
+            abort(REQUEST_ENTITY_TOO_LARGE)
+        else:
+            s_imagename = secure_filename(request.files['image'].filename)
     else:
         s_imagename = None
 
@@ -253,8 +273,8 @@ def dashboard_post_writepost():
     return ''
 
 
-@burp.app.route('/dashboard/write-post/<edit_part>', methods=['POST'])
-def dashboard_post_writepost_edit(edit_part):
+@burp.app.route(urls.DASHBOARD_ALLPOSTS_EDIT, methods=['POST'])
+def dashboard_post_editpost(post_id):
     subject = request.form['subject'].capitalize()
     preface = request.form['preface'] if 'preface' in request.form else None
     content = request.form['content']
@@ -269,74 +289,46 @@ def dashboard_post_writepost_edit(edit_part):
     else:
         tags = (tags_str, )
     tags = tuple(tags)
-
-    post_id = int(edit_part.split('-')[-1])
         
     post_prev = burp.get_post(post_id)
-    if 'delete_img' in request.form:
-        pnew_image_url = '_del_img_' # delete the image
 
-    elif request.files['image']:
+    if not request.files['image']:
+        if 'remove_image' not in request.form:
+            pnew_image_url = post_prev.image_url # user didn't change the image
+        else:
+            pnew_image_url = '_del_img_'
+
+    else:
         pnew_image_name = secure_filename(request.files['image'].filename)
         pnew_image_url = r'images/{}'.format(pnew_image_name)
-        
-    else:
-        pnew_image_url = post_prev.image_url # user didn't change the image
 
+    post_prev_items = post_prev.__dict__
 
-    def get_post_props(post): # it was so much tempting to do this, so blame me
-        post_properties = {}
-
-        for attr_name in dir(post):
-            attr_value = getattr(post, attr_name)
-            type_method = type(burp.delete_post) # type of a arbitrary method => 'method'
-
-            if '__' not in attr_name and type(attr_value) != type_method:
-                # just pick object's properties, namely all of the attributes except methods and default attributes (those with name __<attr_name>__)
-                post_properties[attr_name] = attr_value
-
-        return post_properties
-    
-    post_prev_items = get_post_props(post_prev)
-
-    post_new = Post(post_id, subject, preface, content, pnew_image_url, tags, '')
-    post_new_items = get_post_props(post_new)
+    post_new = Post(0, subject, preface, content, pnew_image_url, tags, '')
+    post_new_items = post_new.__dict__
 
     changed_parts = burp.get_item_changed_parts(post_prev_items, post_new_items)
-    if not changed_parts:
-        flash("Couldn't find any change in the editted post, so any part of your post won't change", 'errors')
-        return redirect(urls.DASHBOARD_ALLPOSTS)
-
-
-    # get written items errors
-    written_post = Post(-1, subject, preface, content, '', tags, '')
-    errors = burp.get_write_input_errors(written_post)
-
-    if len(errors) > 0:
-        for error in errors:
-            # with js: make form inputs validation automatic
-
-            flash(error, 'errors')
-
-        post_remainder_ = {'subject': subject, 'preface': preface, 'content': content, 'tags': tags_str}
-        return redirect(urls.DASHBOARD_ALLPOSTS + '/edit' + f'/{post_id}')
-        
 
     if 'image_url' in changed_parts:
+
         if post_prev.image_url: # delete the old image (if post had image)
-            old_image_url = post_prev.image_url
+            old_image_url = post_prev.image_url[1:]
             remove(old_image_url)
 
         if changed_parts['image_url'] != '_del_img_': # change the post image to new image
-            new_image_file = request.files['image']
-            s_imagename = secure_filename(new_image_file.filename)
-            file_save_path = path.join(r'F:\Projects\network\burp_blog\images', s_imagename)
-            new_image_file.save(file_save_path)
+            try:
+                # burp.images_uploadset.save(request.files['image'] ## for some weird reasons, this won't work somethimes
+                burp.save_file(request.files['image'], 'images', 'image')
+
+            except fu.UploadNotAllowed:
+                abort(FORBIDDEN)
+            except RequestEntityTooLarge:
+                abort(REQUEST_ENTITY_TOO_LARGE)
 
         else: # let the post to be without image
             changed_parts['image_url'] = None
 
-    burp.update_post(post_id, changed_parts)
+    burp.update_post(post_id, changed_parts) # update changes to db
     
     flash('Your post editted successfuly!', 'ok')
     return redirect(urls.DASHBOARD_ALLPOSTS)
@@ -421,7 +413,7 @@ def search():
 def post(post_id):
     post_ = burp.get_post(post_id)
     if not post_:
-        abort(404, description="Post wasn't found!")
+        abort(NOT_FOUND, description="Post wasn't found!")
 
     tags_ = burp.posts_tags
 
@@ -441,8 +433,22 @@ def js_query(query_type):
         return json.dumps(result)
 
     elif query_type == 'flash':
-        message = request.form['message']
+        message = request.form['msg']
+        flash(message)
         return ''
+
+    elif query_type == 'post':
+        post_id = int(request.form['post_id'])
+        
+        post = burp.get_post(post_id)
+        post_editables = {
+            'subject'  : post.subject,
+            'preface'  : post.preface,
+            'content'  : post.content,
+            'tags'     : post.tags,
+            'image_url': post.image_url
+        }
+        return json.dumps(post_editables)
 
 @burp.app.route(urls.LOGOUT)
 def logout():
@@ -471,6 +477,8 @@ def get_file(file_name, folder_name=None):
 
 if __name__ == '__main__':
     try:
+        # burp.app.debug = True
+        # toolbar = DebugToolbarExtension(burp.app)
         burp.app.run(host='localhost', debug=True)
     except (KeyboardInterrupt, mysql_error):
         burp.db_connection.close()

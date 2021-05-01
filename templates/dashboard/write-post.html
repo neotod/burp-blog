@@ -6,11 +6,7 @@
 {% endblock head %} 
 
 {% block content_container %}
-    {% if not edit_mode %}
         <form method="POST" enctype="multipart/form-data">
-    {% else %}
-        <form method="POST" enctype="multipart/form-data" action="/dashboard/write-post/edit-post-{{ post_remainder['id'] }}">
-    {% endif %}
         <div class="inputs-wrapper">
             <div class="inputs-row input-subject-container">
                 <span class="length-indicator">0/100</span>
@@ -18,30 +14,15 @@
             </div>
 
             <div class="inputs-row input-image-container">
-                {% if post_remainder and 'image' in post_remainder %} {# for edit-post part #}
-                    <div class="new-image-input-wrapper">
-                        <label for="input-file-id">new Image <br>(leave it if you don't want to change your post image)</label>
-                        <input id="input-file-id" class="input-file" type="file" name="image" accept=".png, .jpg, .jpeg, .webp"/>
-                    </div>
-                    {% if post_remainder['image'] %} {# for edit-post part / if post has image #}
-                        <div class="image-wrapper">
-                            <div>
-                                <img title="post current image" src="/{{ post_remainder['image'] }}"/>
-                            </div>
-                            <div>
-                                <label for="delete-img-chbox">I want my post to be without image</label>
-                                <input id="delete-img-chbox" type="checkbox" title="delete post image for next time after edit" name="delete_img" value="true"/>
-                            </div>
-                        </div>
-                    {% else %} {# for edit-post part / if post doesn't have image #}
-                        <div class="image-wrapper image-wrapper-noimage">
-                            post has no image
-                        </div>
-                    {% endif %}
-                {% else %} {# for write-post part / post image upload input #}
-                    <label for="input-file-id">Image </label>
-                    <input id="input-file-id" class="input-file" type="file" name="image" value="Post Image" accept=".png, .jpg, .jpeg, .webp"/>
-                {% endif %}
+                <div class="buttons-container">
+                    <input type="file" name="image" accept=".png, .jpg, .jpeg, .webp"/>
+                    <input type="checkbox" name='remove_image'/>
+                    <button type="button" title="Upload a new photo for your post">Upload photo</button>
+                    <button type="button" title="Remove your post photo">Remove photo</button>
+                </div>
+                <div class="image-wrapper">
+                    <img src="/images/not-found.png"/>
+                </div>
             </div>
 
             <div class="inputs-row input-preface-container">
@@ -86,7 +67,8 @@
             </div>
 
             <div class="inputs-row input-submit-container">
-                <input class="input-submit" type="submit" value="Finish"/>
+                <input type="button" title="Did you mess up your post? No problem, there is a way back." value="Back to default">
+                <input type="submit" value="Finish"/>
             </div>
         </div>
     </form>
