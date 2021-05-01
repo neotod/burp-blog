@@ -1,4 +1,5 @@
 from mysql.connector import MySQLConnection
+import multipledispatch as md
 
 class Db_Functions:
 
@@ -54,7 +55,8 @@ class Db_Functions:
         cursor.close()
 
     @staticmethod
-    def delete_from_table(connection: MySQLConnection, table_name: str, condition: dict, update_ai:bool=False, ai_column_name:str='id'):
+    @md.dispatch(MySQLConnection, str, dict)
+    def delete_from_table(connection: MySQLConnection, table_name: str, condition: dict):
         statement = f'''
         DELETE FROM `{table_name}`
         WHERE
@@ -75,31 +77,49 @@ class Db_Functions:
 
         condition_str = condition_str[:-4] # for removing extra AND
         statement += (condition_str + ';')
-        
-        if update_ai :
-            temp_statement = f'''
-            SELECT {ai_column_name} FROM {table_name} WHERE
-            '''
-            temp_statement += (condition_str + ';')
-
-            cursor = connection.cursor()
-            cursor.execute(temp_statement)
-
-            item_id = cursor.fetchall()[0][0]
 
         cursor = connection.cursor()
         cursor.execute(statement)
         cursor.close()
 
-        if update_ai:
-            statement = f'''
-            ALTER TABLE {table_name} AUTO_INCREMENT={item_id}
-            '''
+    @staticmethod
+    @md.dispatch(MySQLConnection, str, dict, str)
+    def delete_from_table(connection: MySQLConnection, table_name: str, condition: dict, ai_column_name:str='id'):
+        ''' another delete_from_table function, but this will also update auto_incremnet value '''
 
-            cursor = connection.cursor()
-            cursor.execute(statement)
-            cursor.close()
+        condition_str = ''
+        for column in condition:
+            condition_val = condition[column]
+            condition_val_type = type(condition_val)
+            if condition_val_type == str or condition_val_type == int or len(condition_val) == 1:
+                if condition_val_type == str:
+                    condition_str += f" `{column}` = '{condition_val}' AND"
+                else:
+                    condition_str += f" `{column}` = {condition_val} AND"
 
+            else:
+                condition_str += f' `{column}` IN {condition_val} AND'
+
+        condition_str = condition_str[:-4] # for removing extra AND
+
+        statement = f'''
+        SELECT {ai_column_name} FROM {table_name} WHERE
+        '''
+        statement += (condition_str + ';')
+
+        cursor = connection.cursor()
+        cursor.execute(statement)
+        item_id = cursor.fetchall()[0][0]
+
+        Db_Functions.delete_from_table(connection, table_name, condition) # delete record from table
+
+        statement = f'''
+        ALTER TABLE {table_name} AUTO_INCREMENT={item_id}
+        '''
+
+        cursor = connection.cursor()
+        cursor.execute(statement)
+        cursor.close()
 
     @staticmethod
     def update_table(connection: MySQLConnection, table_name: str, setting_columns: dict, condition: dict=None):
