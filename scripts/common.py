@@ -14,17 +14,24 @@ from werkzeug.utils import secure_filename
 from werkzeug.datastructures import FileStorage
 
 from flask import Flask, session
+from flask_login import LoginManager, COOKIE_DURATION, UserMixin
 import flask_uploads as fu
+
+config = configparser.ConfigParser()
+config.read('config.ini')
+config = config['flask']
+
+COOKIE_DURATION = config.getint('remember_me_cookie_duration')
 
 class Burp_Blog:
     def __init__(self):
         self.app = Flask('__main__') # check the arguments
-        self.app.secret_key = b'\x8c\xc1\x070\xc3\xd5\xa6\xed\x0b\xd0\xa2\xa0s\xd1Z'
-        self.app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024 # 2MB
-        self.app.config['UPLOADED_IMAGES_DEST'] = '/images'
+        self.app.secret_key = config.get('secret_key')
+        self.app.config['MAX_CONTENT_LENGTH'] = config.getint('max_content_length')
 
-        self.images_uploadset = fu.UploadSet('images', fu.IMAGES)
-        fu.configure_uploads(self.app, self.images_uploadset)
+        self.lm = LoginManager()
+        self.lm.login_view = 'login'
+        self.lm.init_app(self.app)
 
         self.app.jinja_env.autoescape = False
 
@@ -147,7 +154,7 @@ class Burp_Blog:
                 result = cursor.fetchall()
                 image_id = result[0][0]
 
-            user_id = self.get_user_info(author_username)['id']
+            user_id = self.get_user_info(author_username, self.db_connection)['id']
             edit_timestamp = None
             Db_Functions.insert_into_table(self.db_connection,
                                             'posts',
@@ -407,70 +414,6 @@ class Burp_Blog:
 
         return errors
 
-    def create_user(self, name, lastname, username, password, email):
-        cursor = self.db_connection.cursor()
-
-        # note: you can add encryption here for password_len
-        password_len = len(password)
-
-        password_hash = self.get_password_hash(password)
-
-        Db_Functions.insert_into_table(self.db_connection, 'password_hashes', ('password_hash', 'password_len'), ((password_hash, password_len),))
-
-        last_insert_id = Db_Functions.get_last_id(self.db_connection, 'password_hashes')
-        Db_Functions.insert_into_table(self.db_connection, 
-                                      'users',
-                                      ('name_', 'lastname', 'username', 'password_hash_id', 'email'),
-                                      ((name, lastname, username, last_insert_id, email), ))
-
-        cursor.close()
-
-    def get_user_fullname(self, username):
-        statement = '''
-        SELECT name_, lastname FROM users
-        WHERE username = %s;
-        '''
-
-        cursor = self.db_connection.cursor()
-        cursor.execute(statement, (username, ))
-
-        result = cursor.fetchall()
-        name = result[0][0]
-        lastname = result[0][1]
-
-        fullname = f'{name} {lastname}'
-        if len(fullname) > 25:
-            fullname = fullname[22] + '...'
-
-        cursor.close()
-        return fullname
-
-    def get_user_info(self, username):
-        statement = '''
-        SELECT u.id, u.name_, u.lastname, u.username, u.password_hash_id, p_h.password_hash, p_h.password_len, u.email
-        FROM users AS u
-        INNER JOIN password_hashes AS p_h ON p_h.id = u.password_hash_id 
-        WHERE u.username = %s
-        '''
-
-        cursor = self.db_connection.cursor()
-        cursor.execute(statement, (username, ))
-
-        result = cursor.fetchall()
-        
-        info_dict = {}
-        info_dict['id'] = result[0][0]
-        info_dict['name_'] = result[0][1]
-        info_dict['lastname'] = result[0][2]
-        info_dict['username'] = result[0][3]
-        info_dict['password_hash_id'] = result[0][4]
-        info_dict['password_hash'] = result[0][5]
-        info_dict['password_len'] = result[0][6]
-        info_dict['email'] = result[0][7]
-
-        cursor.close()
-        return info_dict
-
     def get_user_all_posts(self, username, sort_by_timestamp=False):
         statement = '''
         SELECT p.id FROM posts AS p
@@ -596,3 +539,59 @@ class Post():
         r_content.append((plain_content, 'plain'))
 
         return r_content
+
+class User(UserMixin):
+    def __init__(self, id, username, name, lastname, email):
+        self.id = id
+        self.username = username
+        self.name = name
+        self.lastname = lastname
+        self.email = email
+
+class Users:
+    def __init__(self):
+        self.current_users = {}
+    
+    def create_user(self, name: str, lastname: str, username: str, password: str, email: str, db_connection: MySQLConnection):
+        cursor = db_connection.cursor()
+
+        # note: you can add encryption here for password_len
+        password_len = len(password)
+
+        password_hash = sha256(password.encode()).hexdigest()
+
+        Db_Functions.insert_into_table(db_connection, 'password_hashes', ('password_hash', 'password_len'), ((password_hash, password_len),))
+
+        last_insert_id = Db_Functions.get_last_id(db_connection, 'password_hashes')
+        Db_Functions.insert_into_table(db_connection, 
+                                      'users',
+                                      ('name_', 'lastname', 'username', 'password_hash_id', 'email'),
+                                      ((name, lastname, username, last_insert_id, email), ))
+
+        cursor.close()
+
+    def get_user_info(self, username: str, db_connection: MySQLConnection):
+        statement = '''
+        SELECT u.id, u.name_, u.lastname, u.username, u.password_hash_id, p_h.password_hash, p_h.password_len, u.email
+        FROM users AS u
+        INNER JOIN password_hashes AS p_h ON p_h.id = u.password_hash_id 
+        WHERE u.username = %s
+        '''
+
+        cursor = db_connection.cursor()
+        cursor.execute(statement, (username, ))
+
+        result = cursor.fetchall()
+        
+        info_dict = {}
+        info_dict['id'] = result[0][0]
+        info_dict['name_'] = result[0][1]
+        info_dict['lastname'] = result[0][2]
+        info_dict['username'] = result[0][3]
+        info_dict['password_hash_id'] = result[0][4]
+        info_dict['password_hash'] = result[0][5]
+        info_dict['password_len'] = result[0][6]
+        info_dict['email'] = result[0][7]
+
+        cursor.close()
+        return info_dict

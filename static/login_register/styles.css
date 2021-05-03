@@ -70,6 +70,13 @@ form {
     text-align: black;
 }
 
+.login-container .remme_wrapper {
+    display: flex;
+    justify-content: flex-start;
+    font-size: large;
+    margin-bottom: 20px;
+}
+
 @media only screen and (max-width: 1200px){
     .login-container, .register-container  {
         padding: 50px 5px !important;

@@ -44,7 +44,7 @@
                 </div>
                 <div class="user-wrapper">
                     <ul>
-                        {% if not user_fullname %}
+                        {% if current_user.is_anonymous %}
                             <li><a tilte="Login" href="/login">Login / Register</a></li>
                         {% else %}
                             <li>
@@ -108,16 +108,3 @@
         <script type="text/javascript" src="/static/parent/script.js"></script>
     </body>
 </html>
-
-<!--macros-->
-{% macro input(type, name, placeholder, title, maxlength, required=True, autofocus=False) %}
-    {% if required and autofocus %}
-        <input type="{{ type }}" name="{{ name }}" placeholder="{{ placeholder }}" title="{{ title }}" maxlength="{{ maxlength }}" required autofocus/>
-    {% elif required %}
-        <input type="{{ type }}" name="{{ name }}" placeholder="{{ placeholder }}" title="{{ title }}" maxlength="{{ maxlength }}" required/>
-    {% elif autofocus %}
-        <input type="{{ type }}" name="{{ name }}" placeholder="{{ placeholder }}" title="{{ title }}" maxlength="{{ maxlength }}" autofocus/>
-    {% else %}
-        <input type="{{ type }}" name="{{ name }}" placeholder="{{ placeholder }}" title="{{ title }}" maxlength="{{ maxlength }}"/>
-    {% endif %}
-{% endmacro %}

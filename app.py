@@ -1,9 +1,12 @@
 import json
+from sys import exit
 from time import sleep, time
 from os import path, remove, curdir
 
 from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.utils import secure_filename
+
+from werkzeug.security import check_password_hash
 
 from mysql.connector import Error as mysql_error
 
@@ -13,20 +16,21 @@ from flask import ( Flask,
                     redirect, 
                     url_for, 
                     request, 
-                    session, 
                     flash, 
                     abort, 
                 )
 
 from flask_debugtoolbar import DebugToolbarExtension
+from flask_login import login_user, logout_user, login_required, current_user
 
 from scripts import urls
-from scripts.common import *
+from scripts.common import Burp_Blog, Post, Users, User, fu
 from scripts.database_stuff import Db_Functions
 
 from http.client import TEMPORARY_REDIRECT, NOT_FOUND, REQUEST_ENTITY_TOO_LARGE, FORBIDDEN
 
 burp = Burp_Blog()
+users = Users()
 
 @burp.app.route(urls.HOME)
 def index():
@@ -52,32 +56,36 @@ def index():
 
         posts_ = burp.get_posts(page, tag)
 
-        if 'user' in session:
-            user_fullname_ = session['user'][1]
-        else:
-            user_fullname_ = None
-
     burp.current_path = request.full_path
     pages_num_ = burp.get_pages_num(tag)
 
     tags_ = burp.posts_tags
-    return render_template('index.html', posts=posts_, tags=tags_, pages_num=pages_num_, curpage=page, page_name='latest_posts', user_fullname=user_fullname_)
+    return render_template('index.html', posts=posts_, tags=tags_, pages_num=pages_num_, curpage=page, page_name='latest_posts')
 
 
 @burp.app.route(urls.LOGIN, methods=['GET', 'POST'])
 def login():
     if request.method == 'GET':
-        if 'user' in session:
+        if current_user.is_authenticated:
             return redirect(urls.DASHBOARD)
         return render_template('login.html', page_name='login')
 
     elif request.method == 'POST':
         username = request.form['username'].lower()
         password = request.form['password']
+        remember = False
+
+        if 'remme' in request.form:
+            remember = True
 
         validation_res = burp.validate_login(username, password)
         if validation_res['uvalid'] and validation_res['pvalid']:
-            session['user'] = (username, burp.get_user_fullname(username))
+            user_info = users.get_user_info(username, burp.db_connection)
+            user = User(user_info['id'], user_info['username'], user_info['name_'], user_info['lastname'], user_info['email'])
+
+            users.current_users[str(user_info['id'])] = user
+            login_user(user, remember=remember)
+        
             return redirect(urls.HOME) # success
 
         elif not validation_res['uvalid']:
@@ -102,7 +110,7 @@ def register():
         validate_errs = burp.validate_register(username, password, r_password, email)
 
         if not validate_errs:
-            burp.create_user(name, lastname, username, password, email)
+            users.create_user(name, lastname, username, password, email, burp.db_connection)
             flash('You registered successfuly, you can login with your username now.', 'ok')
 
             return redirect(urls.REGISTER)
@@ -114,55 +122,43 @@ def register():
             return redirect(urls.REGISTER)
 
     elif request.method == 'GET':
-        if 'user' in session:
+        if current_user.is_authenticated:
             return redirect(urls.DASHBOARD)
             
         return render_template('register.html', page_name='register')
 
 
 @burp.app.route(urls.DASHBOARD)
-def dashboard_get(part=None, subpart=None):
-    if not part:
-        return redirect(urls.DASHBOARD_WRITEPOST)
+@login_required
+def dashboard_get():
+    return redirect(urls.DASHBOARD_WRITEPOST)
 
 
 @burp.app.route(urls.DASHBOARD_WRITEPOST, methods=['GET'])
+@login_required
 def dashbaord_get_writepost():
-    if 'user' in session:
-        user_fullname_ = session['user'][1]
-    else:
-        return redirect(urls.LOGIN)
-
     page_name_ = f'dashboard >> write-post'
     template_address = f'dashboard/write-post.html'
 
-    return render_template(template_address, post_remainder=None,
-                            page_name=page_name_, user_fullname=user_fullname_)
+    return render_template(template_address, post_remainder=None, page_name=page_name_)
 
 
 @burp.app.route(urls.DASHBOARD_ALLPOSTS)
+@login_required
 def dashboard_get_allposts():
-    if 'user' in session:
-        user_fullname_ = session['user'][1]
-    else:
-        return redirect(urls.LOGIN)
 
     page_name_ = f'dashboard >> all-posts'
     template_address = f'dashboard/all-posts.html'
-    username = session['user'][0]
+    username = current_user.username
     posts_ = burp.get_user_all_posts(username, sort_by_timestamp=True)
 
-    return render_template(template_address, posts=posts_, page_name=page_name_, user_fullname=user_fullname_)
+    return render_template(template_address, posts=posts_, page_name=page_name_)
 
 
 @burp.app.route(urls.DASHBOARD_ALLPOSTS_ACTIONS, methods=['GET'])
+@login_required
 def dashboard_get_allposts_actions(action, post_id):
-    if 'user' in session:
-        user_fullname_ = session['user'][1]
-    else:
-        return redirect(urls.LOGIN)
-
-    username = session['user'][0]
+    username = current_user.username
     
     user_posts = burp.get_user_all_posts(username)
     user_posts_ids = tuple([post.id for post in user_posts])
@@ -175,7 +171,7 @@ def dashboard_get_allposts_actions(action, post_id):
         page_name_ = f'dashboard >> all-posts >> edit-post'
 
         template_address = f'dashboard/write-post.html'
-        username = session['user'][0]
+        username = current_user.username
 
         post = burp.get_post(post_id)
         post_tags = ', '.join(post.tags)
@@ -184,8 +180,7 @@ def dashboard_get_allposts_actions(action, post_id):
 
         # with js: disable finish button if user haven't changed any part of the post
 
-        return render_template(template_address, edit_mode=True, post_remainder=post_remainder_, # it will render write-post template
-            page_name=page_name_, user_fullname=user_fullname_)
+        return render_template(template_address, edit_mode=True, post_remainder=post_remainder_, page_name=page_name_) # it will render write-post template
 
     elif 'delete' in action: # action is "delete-post"
         if post_id.isdigit():
@@ -197,16 +192,12 @@ def dashboard_get_allposts_actions(action, post_id):
 
 @burp.app.route(urls.DASHBOARD_SETTING)
 @burp.app.route(urls.DASHBOARD_SETTING_PART)
+@login_required
 def dashboard_get_setting(part=None):
-    if 'user' in session:
-        user_fullname_ = session['user'][1]
-    else:
-        return redirect(urls.LOGIN)
-
     page_name_ = f'dashboard >> setting'
     template_address = f'dashboard/setting.html'
-    username = session['user'][0]
-    user_info_ = burp.get_user_info(username)
+    username = current_user.username
+    user_info_ = users.get_user_info(username, burp.db_connection)
 
     password_str = ''
     for _ in range(user_info_['password_len']):
@@ -223,16 +214,12 @@ def dashboard_get_setting(part=None):
         else:
             return redirect(urls.DASHBOARD_SETTING)
 
-    return render_template(template_address, user_info=user_info_, edit=edit_, page_name=page_name_, user_fullname=user_fullname_)
+    return render_template(template_address, user_info=user_info_, edit=edit_, page_name=page_name_)
 
 
 @burp.app.route(urls.DASHBOARD_WRITEPOST, methods=['POST'])
+@login_required
 def dashboard_post_writepost():
-    if 'user' in session:
-        user_fullname_ = session['user'][1]
-    else:
-        return redirect(urls.LOGIN)
-
     page_name_ = f'dashboard >> write-post'
     template_address = f'dashboard/write-post.html'
         
@@ -252,7 +239,7 @@ def dashboard_post_writepost():
 
     tags = tuple(tags)
 
-    username = session['user'][0]
+    username = current_user.username
 
     if request.files['image']:
         try:
@@ -274,6 +261,7 @@ def dashboard_post_writepost():
 
 
 @burp.app.route(urls.DASHBOARD_ALLPOSTS_EDIT, methods=['POST'])
+@login_required
 def dashboard_post_editpost(post_id):
     subject = request.form['subject'].capitalize()
     preface = request.form['preface'] if 'preface' in request.form else None
@@ -335,16 +323,12 @@ def dashboard_post_editpost(post_id):
 
 
 @burp.app.route(urls.DASHBOARD_SETTING, methods=['POST'])
+@login_required
 def dashboard_post_setting():
-    if 'user' in session:
-        user_fullname_ = session['user'][1]
-    else:
-        return redirect(urls.LOGIN)
-
     template_address = f'dashboard/setting.html'
 
-    username = session['user'][0]
-    user_info = burp.get_user_info(username)
+    username = current_user.username
+    user_info = users.get_user_info(username, burp.db_connection)
 
     name = request.form['name']
     lastname = request.form['lastname']
@@ -417,12 +401,7 @@ def post(post_id):
 
     tags_ = burp.posts_tags
 
-    if 'user' in session:
-        user_fullname_ = session['user'][1]
-    else:
-        user_fullname_ = None
-
-    return render_template('post.html', post=post_, tags=tags_, page_name='post', user_fullname=user_fullname_)
+    return render_template('post.html', post=post_, tags=tags_, page_name='post')
 
 
 @burp.app.route(urls.JS_AJAX, methods=['GET', 'POST'])
@@ -450,9 +429,22 @@ def js_query(query_type):
         }
         return json.dumps(post_editables)
 
+@burp.lm.unauthorized_handler
+def unauthorized():
+    return redirect(urls.LOGIN)
+
+@burp.lm.user_loader
+def load_user(user_id):
+    if user_id in users.current_users:
+        return users.current_users[user_id]
+    else:
+        return None
+
 @burp.app.route(urls.LOGOUT)
+@login_required
 def logout():
-    del session['user']
+    del users.current_users[current_user.get_id()]
+    logout_user()
     return redirect(urls.HOME)
 
 
@@ -481,4 +473,7 @@ if __name__ == '__main__':
         # toolbar = DebugToolbarExtension(burp.app)
         burp.app.run(host='localhost', debug=True)
     except (KeyboardInterrupt, mysql_error):
-        burp.db_connection.close()
+        try:
+            burp.db_connection.close()
+        except:
+            exit(0)
